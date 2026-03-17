@@ -49,7 +49,7 @@ local function KillTarget(target, dist)
                     ["1"] = {["knockbackMul"] = 1, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["lungeMul"] = 1, ["attackTime"] = 0.65},
                     ["2"] = {["lungeMul"] = 1, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["knockbackMul"] = 1, ["attackTime"] = 0.65},
                     ["3"] = {["lungeMult"] = 0.75, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["knockbackMul"] = 1.5, ["attackTime"] = 0.716},
-                    ["4"] = {["lungeMult"] = 2.25, ["slowTime"] = 1.5, ["slowMult"] = 0.2, ["knockbackMul"] = 2.25, ["attackTime"] = 0.983}
+                    ["4"] = {["lungeMul"] = 2.25, ["slowTime"] = 1.5, ["slowMult"] = 0.2, ["knockbackMul"] = 2.25, ["attackTime"] = 0.983}
                 },
                 ["attackOrder"] = {"1", "2", "3", "4"}
             },
@@ -165,8 +165,14 @@ RunService.Stepped:Connect(function()
 end)
 
 local mTab = window:AddFolder("Movement & Combat")
-mTab:AddToggle({text = "Auto Equip Sword", state = true, callback = function(v) Settings.AutoEquip = v end})
-mTab:AddToggle({text = "ESP", state = false, callback = function(v) Settings.ESP = v Notify("VISUAL", "ESP: " .. (v and "ON" or "OFF")) end})
+mTab:AddToggle({text = "Auto Equip Sword", state = true, callback = function(v) 
+    Settings.AutoEquip = v 
+    Notify("EQUIP", "Auto Equip: " .. (v and "ON" or "OFF"))
+end})
+mTab:AddToggle({text = "ESP", state = false, callback = function(v) 
+    Settings.ESP = v 
+    Notify("VISUAL", "ESP: " .. (v and "ON" or "OFF")) 
+end})
 mTab:AddSlider({text = "Walk Speed", min = 16, max = 200, callback = function(v) 
     Settings.WalkSpeed = v 
     local t = tick() lastSliderTime = t
@@ -179,8 +185,15 @@ mTab:AddSlider({text = "Jump Power", min = 50, max = 300, callback = function(v)
 end})
 
 local fTab = window:AddFolder("Farm")
-fTab:AddToggle({text = "KillAura", state = false, callback = function(v) Settings.KillAura = v Notify("COMBAT", "Aura: " .. (v and "ON" or "OFF")) end})
-fTab:AddSlider({text = "Aura Range", min = 10, max = 10000, callback = function(v) Settings.AuraRange = v end})
+fTab:AddToggle({text = "KillAura", state = false, callback = function(v) 
+    Settings.KillAura = v 
+    Notify("COMBAT", "Aura: " .. (v and "ON" or "OFF")) 
+end})
+fTab:AddSlider({text = "Aura Range", min = 10, max = 10000, callback = function(v) 
+    Settings.AuraRange = v 
+    local t = tick() lastSliderTime = t
+    task.delay(0.3, function() if lastSliderTime == t then Notify("COMBAT", "Range: " .. math.floor(v)) end end)
+end})
 
 local iTab = window:AddFolder("Credit / Info")
 iTab:AddLabel({text = "Made By Era"})
