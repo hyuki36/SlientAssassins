@@ -48,8 +48,8 @@ local function KillTarget(target, dist)
                 ["attackCycle"] = {
                     ["1"] = {["knockbackMul"] = 1, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["lungeMul"] = 1, ["attackTime"] = 0.65},
                     ["2"] = {["lungeMul"] = 1, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["knockbackMul"] = 1, ["attackTime"] = 0.65},
-                    ["3"] = {["lungeMul"] = 0.75, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["knockbackMul"] = 1.5, ["attackTime"] = 0.716},
-                    ["4"] = {["lungeMul"] = 2.25, ["slowTime"] = 1.5, ["slowMult"] = 0.2, ["knockbackMul"] = 2.25, ["attackTime"] = 0.983}
+                    ["3"] = {["lungeMult"] = 0.75, ["slowMult"] = 0.2, ["slowTime"] = 1.5, ["knockbackMul"] = 1.5, ["attackTime"] = 0.716},
+                    ["4"] = {["lungeMult"] = 2.25, ["slowTime"] = 1.5, ["slowMult"] = 0.2, ["knockbackMul"] = 2.25, ["attackTime"] = 0.983}
                 },
                 ["attackOrder"] = {"1", "2", "3", "4"}
             },
@@ -85,7 +85,7 @@ task.spawn(function()
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 for _, v in pairs(Players:GetPlayers()) do
-                    if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character.Humanoid.Health > 0 then
+                    if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
                         local dist = (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
                         if dist < Settings.AuraRange then
                             KillTarget(v.Character, dist)
@@ -98,13 +98,40 @@ task.spawn(function()
     end
 end)
 
-local esp_objects = {}
+local function CreateESP(player)
+    player.CharacterAdded:Connect(function(character)
+        if Settings.ESP then
+            task.wait(0.5)
+            local root = character:WaitForChild("HumanoidRootPart", 5)
+            if root and not root:FindFirstChild("SlientESP") then
+                local box = Instance.new("BoxHandleAdornment")
+                box.Name = "SlientESP"
+                box.Size = Vector3.new(4, 6, 1)
+                box.AlwaysOnTop = true
+                box.ZIndex = 10
+                box.Adornee = root
+                box.Color3 = Color3.fromRGB(255, 0, 0)
+                box.Transparency = 0.5
+                box.Parent = root
+            end
+        end
+    end)
+end
+
+for _, v in pairs(Players:GetPlayers()) do
+    if v ~= LocalPlayer then CreateESP(v) end
+end
+
+Players.PlayerAdded:Connect(CreateESP)
+
 RunService.RenderStepped:Connect(function()
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
-            if Settings.ESP and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local root = v.Character.HumanoidRootPart
-                if not esp_objects[v.Name] then
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local root = v.Character.HumanoidRootPart
+            local existingESP = root:FindFirstChild("SlientESP")
+            
+            if Settings.ESP then
+                if not existingESP then
                     local box = Instance.new("BoxHandleAdornment")
                     box.Name = "SlientESP"
                     box.Size = Vector3.new(4, 6, 1)
@@ -114,13 +141,9 @@ RunService.RenderStepped:Connect(function()
                     box.Color3 = Color3.fromRGB(255, 0, 0)
                     box.Transparency = 0.5
                     box.Parent = root
-                    esp_objects[v.Name] = box
                 end
             else
-                if esp_objects[v.Name] then
-                    esp_objects[v.Name]:Destroy()
-                    esp_objects[v.Name] = nil
-                end
+                if existingESP then existingESP:Destroy() end
             end
         end
     end
