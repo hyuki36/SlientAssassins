@@ -15,6 +15,7 @@ local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 local function Notify(title, text)
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -85,6 +86,73 @@ local function KillTarget(target, dist)
     end)
 end
 
+local function createESP(player)
+    local box = Drawing.new("Square")
+    local tracer = Drawing.new("Line")
+    local nameTag = Drawing.new("Text")
+
+    box.Visible = false
+    box.Color = Color3.fromRGB(0, 255, 0)
+    box.Thickness = 1.5
+    box.Transparency = 1
+    box.Filled = false
+    
+    tracer.Visible = false
+    tracer.Color = Color3.fromRGB(255, 0, 0)
+    tracer.Thickness = 1
+    tracer.Transparency = 1
+    
+    nameTag.Visible = false
+    nameTag.Color = Color3.fromRGB(255, 255, 255)
+    nameTag.Size = 16
+    nameTag.Center = true
+    nameTag.Outline = true
+
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if Settings.ESP and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= LocalPlayer then
+            local root = player.Character.HumanoidRootPart
+            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+            
+            if onScreen then
+                local size = Vector2.new(2000 / pos.Z, 2500 / pos.Z)
+                
+                box.Size = size
+                box.Position = Vector2.new(pos.X - size.X / 2, pos.Y - size.Y / 2)
+                box.Visible = true
+                
+                tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                tracer.To = Vector2.new(pos.X, pos.Y + (size.Y / 2))
+                tracer.Visible = true
+                
+                nameTag.Position = Vector2.new(pos.X, pos.Y - (size.Y / 2) - 20)
+                nameTag.Text = player.Name
+                nameTag.Visible = true
+            else
+                box.Visible = false
+                tracer.Visible = false
+                nameTag.Visible = false
+            end
+        else
+            box.Visible = false
+            tracer.Visible = false
+            nameTag.Visible = false
+            if not player or not player.Parent then
+                box:Remove()
+                tracer:Remove()
+                nameTag:Remove()
+                connection:Disconnect()
+            end
+        end
+    end)
+end
+
+for _, p in pairs(Players:GetPlayers()) do 
+    createESP(p) 
+end
+
+Players.PlayerAdded:Connect(createESP)
+
 task.spawn(function()
     while true do
         if Settings.KillAura then
@@ -101,38 +169,6 @@ task.spawn(function()
             end
         end
         task.wait(0.01)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character then
-            local root = v.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                local existingESP = root:FindFirstChild("SlientESP")
-                
-                if Settings.ESP then
-                    if not existingESP then
-                        local box = Instance.new("BoxHandleAdornment")
-                        box.Name = "SlientESP"
-                        box.Size = Vector3.new(4, 6, 1)
-                        box.AlwaysOnTop = true
-                        box.ZIndex = 10
-                        box.Adornee = root
-                        box.Color3 = Color3.fromRGB(255, 0, 0)
-                        box.Transparency = 0.5
-                        box.Parent = root
-                    else
-                        existingESP.Adornee = root
-                        existingESP.Visible = true
-                    end
-                else
-                    if existingESP then 
-                        existingESP:Destroy() 
-                    end
-                end
-            end
-        end
     end
 end)
 
@@ -235,7 +271,7 @@ fTab:AddSlider({
 
 local iTab = window:AddFolder("Credit / Info")
 
-iTab:AddLabel({text = "Made By Zae"})
+iTab:AddLabel({text = "Made By Era"})
 
 iTab:AddButton({
     text = "Copy Link Discord", 
