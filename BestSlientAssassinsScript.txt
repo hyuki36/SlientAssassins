@@ -137,6 +137,7 @@ local function createESP(player)
             box.Visible = false
             tracer.Visible = false
             nameTag.Visible = false
+            
             if not player or not player.Parent then
                 box:Remove()
                 tracer:Remove()
@@ -197,7 +198,7 @@ mTab:AddToggle({
     state = true, 
     callback = function(v) 
         Settings.AutoEquip = v 
-        Notify("COMBAT", "Auto Equip: " .. (v and "ON" or "OFF"))
+        Notify("EQUIP", "Auto Equip: " .. (v and "ON" or "OFF"))
     end
 })
 
@@ -272,6 +273,8 @@ fTab:AddSlider({
 local iTab = window:AddFolder("Credit / Info")
 
 iTab:AddLabel({text = "Made By Zae"})
+
+iTab:AddLabel({text = "Helper: Era_"})
 
 iTab:AddButton({
     text = "Copy Link Discord", 
