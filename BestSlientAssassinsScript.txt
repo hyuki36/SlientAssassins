@@ -290,7 +290,7 @@ fTab:AddSlider({
 
 local iTab = window:AddFolder("Credit / Info")
 
-iTab:AddLabel({text = "Made By Era"})
+iTab:AddLabel({text = "Made By Zae"})
 
 iTab:AddLabel({text = "Helper: Era_"})
 
