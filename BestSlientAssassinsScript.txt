@@ -7,7 +7,9 @@ local Settings = {
     AutoEquip = true,
     KillAura = false,
     AuraRange = 20,
-    ESP = false
+    ESP = false,
+    BoxColor = Color3.fromRGB(0, 255, 0),
+    TracerColor = Color3.fromRGB(255, 0, 0)
 }
 
 local lastSliderTime = 0
@@ -63,7 +65,7 @@ local function KillTarget(target, dist)
             ["shouldSlow"] = true,
             ["lungeKnockback"] = 55,
             ["hitboxSize"] = Vector3.new(120, 120, 120),
-            ["slowMult"] = 0.2,
+            ["slowMult"] = 0.01,
             ["cycleIndex"] = 1,
             ["hitboxOffset"] = Vector3.new(0, 0, 0),
             ["tool"] = tool,
@@ -92,27 +94,50 @@ local function createESP(player)
     local nameTag = Drawing.new("Text")
 
     box.Visible = false
-    box.Color = Color3.fromRGB(0, 255, 0)
     box.Thickness = 1.5
     box.Transparency = 1
     box.Filled = false
-    
+
     tracer.Visible = false
-    tracer.Color = Color3.fromRGB(255, 0, 0)
     tracer.Thickness = 1
     tracer.Transparency = 1
-    
+
     nameTag.Visible = false
-    nameTag.Color = Color3.fromRGB(255, 255, 255)
     nameTag.Size = 16
     nameTag.Center = true
     nameTag.Outline = true
 
+    local function updateColors()
+        if player.TeamColor then
+            nameTag.Color = player.TeamColor.Color
+            box.Color = player.TeamColor.Color
+            tracer.Color = player.TeamColor.Color
+        else
+            nameTag.Color = Color3.fromRGB(255, 255, 255)
+            box.Color = Settings.BoxColor
+            tracer.Color = Settings.TracerColor
+        end
+    end
+
+    updateColors()
+    player:GetPropertyChangedSignal("Team"):Connect(updateColors)
+
     local connection
     connection = RunService.RenderStepped:Connect(function()
-        if Settings.ESP and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= LocalPlayer then
-            local root = player.Character.HumanoidRootPart
-            local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+        if not player or player.Parent == nil then
+            box:Remove()
+            tracer:Remove()
+            nameTag:Remove()
+            connection:Disconnect()
+            return
+        end
+
+        local character = player.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChild("Humanoid")
+
+        if Settings.ESP and rootPart and humanoid and humanoid.Health > 0 and player ~= LocalPlayer then
+            local pos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
             
             if onScreen then
                 local size = Vector2.new(2000 / pos.Z, 2500 / pos.Z)
@@ -120,11 +145,11 @@ local function createESP(player)
                 box.Size = size
                 box.Position = Vector2.new(pos.X - size.X / 2, pos.Y - size.Y / 2)
                 box.Visible = true
-                
+
                 tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                 tracer.To = Vector2.new(pos.X, pos.Y + (size.Y / 2))
                 tracer.Visible = true
-                
+
                 nameTag.Position = Vector2.new(pos.X, pos.Y - (size.Y / 2) - 20)
                 nameTag.Text = player.Name
                 nameTag.Visible = true
@@ -137,19 +162,12 @@ local function createESP(player)
             box.Visible = false
             tracer.Visible = false
             nameTag.Visible = false
-            
-            if not player or not player.Parent then
-                box:Remove()
-                tracer:Remove()
-                nameTag:Remove()
-                connection:Disconnect()
-            end
         end
     end)
 end
 
-for _, p in pairs(Players:GetPlayers()) do 
-    createESP(p) 
+for _, p in pairs(Players:GetPlayers()) do
+    createESP(p)
 end
 
 Players.PlayerAdded:Connect(createESP)
@@ -198,7 +216,7 @@ mTab:AddToggle({
     state = true, 
     callback = function(v) 
         Settings.AutoEquip = v 
-        Notify("EQUIP", "Auto Equip: " .. (v and "ON" or "OFF"))
+        Notify("COMBAT", "Auto Equip: " .. (v and "ON" or "OFF"))
     end
 })
 
@@ -272,7 +290,7 @@ fTab:AddSlider({
 
 local iTab = window:AddFolder("Credit / Info")
 
-iTab:AddLabel({text = "Made By Zae"})
+iTab:AddLabel({text = "Made By Era"})
 
 iTab:AddLabel({text = "Helper: Era_"})
 
