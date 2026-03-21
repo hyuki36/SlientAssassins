@@ -1,5 +1,5 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew",true))()
-local window = library:CreateWindow("Slient Assassins")
+local window = library:CreateWindow("Zae / Era")
 
 local Settings = {
     WalkSpeed = 16,
